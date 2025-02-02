@@ -11,6 +11,8 @@ let usersCollection = () => {
 };
 
 router.get("/", async (req, res) => {
+    let user = await usersCollection().find()
+    
     res.render("index");
 });
 

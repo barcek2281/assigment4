@@ -19,6 +19,13 @@ app.use(bodyParser.urlencoded({ extended: true }));
 app.set("view engine", "ejs");
 app.set("views", path.join(__dirname, "views"));
 
+// for sessions
+app.use(session({
+    secret: process.env.SUPERSECRETKEY,
+    resave: false,
+    saveUninitialized: true
+}));
+
 app.use("/", routerUser)
 
 try {
