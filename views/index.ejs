@@ -15,7 +15,13 @@
 </head>
 <body>
     <div class="container mt-5">
-        <h1>Hello</h1>
+        <h1>Hello,  <%= user ? user.login : "Guest" %>!</h1>
+        <% if (user) { %>
+            <a href="/logout" class="btn btn-danger">Logout</a>
+        <% } else { %>
+            <a href="/login" class="btn btn-primary">Login</a>
+            <a href="/registration" class="btn btn-secondary my-4">Register</a>
+        <% } %>
     </div>
 </body>
 </html>

@@ -2,6 +2,7 @@ const express = require('express');
 const dotenv = require("dotenv");
 const path = require("path");
 const bodyParser = require("body-parser");
+const session = require("express-session");
 
 const {connectToDatabase} = require("./db/mongo.js")
 const routerUser = require("./routers/routerUsers")
@@ -21,12 +22,14 @@ app.set("views", path.join(__dirname, "views"));
 
 // for sessions
 app.use(session({
-    secret: process.env.SUPERSECRETKEY,
+    secret: "your-secret-key",
     resave: false,
-    saveUninitialized: true
+    saveUninitialized: true,
+    cookie: { secure: false } // secure: true, если используешь HTTPS
 }));
 
-app.use("/", routerUser)
+
+app.use("/", routerUser);
 
 try {
     connectToDatabase();
