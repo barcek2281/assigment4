@@ -47,7 +47,7 @@ router.post("/forget-password", async (req, res) => {
 
     const token = crypto.randomBytes(32).toString("hex");
     await usersCollection().updateOne({ email }, { $set: { resetToken: token, tokenExpiration: Date.now() + 3600000 } });
-    const resetLink = `http://https://assigment4-e8c1cbaa2000.herokuapp.com/forget-password/${token}`;
+    const resetLink = `https://assigment4-e8c1cbaa2000.herokuapp.com/forget-password/${token}`;
     await transporter.sendMail({
       to: email,
       subject: "Password Reset",
