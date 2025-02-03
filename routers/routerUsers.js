@@ -1,5 +1,4 @@
 const express = require("express");
-const bodyParser = require("body-parser");
 const bcrypt = require('bcrypt');
 const {getDatabase} = require("../db/mongo.js");
 const { body, validationResult } = require("express-validator");
@@ -16,8 +15,6 @@ let usersCollection = () => {
 router.get("/", async (req, res) => {
     // console.log(req.session.user)
     user = await usersCollection().findOne({_id: new ObjectId(req.session.user)})
-    
-
     if (user) {
         res.render("index", {user: user});
     }else{
@@ -25,12 +22,27 @@ router.get("/", async (req, res) => {
     }
 });
 
-
 router.get("/login", async (req, res) => {
-    res.render("login");
+    res.render("login", {error: null});
 });
 
 router.post("/login", async (req, res) => {
+    const {email, password} = req.body;
+
+    let user = await usersCollection().findOne({email: email});
+    if (!user) {
+        res.render("login", {error: "incorrect email or password"})
+        return
+    }
+
+    result = await bcrypt.compare(password, user.password);
+    if (result) {
+    
+        req.session.user = user._id
+        res.redirect("/")
+    } else {
+        res.render("login", {error: "incorrect email or password"})
+    }
 });
 
 router.get("/registration", async (req, res) => {
@@ -42,7 +54,6 @@ router.post("/registration",
     body("email").isEmail().withMessage("Invalid email format"),
     body("password").isLength({ min: 6 }).withMessage("Password must be at least 6 characters long"),],
     async (req, res) => {
-
     const { login, email, password } = req.body;
 
     const errors = validationResult(req);
@@ -55,16 +66,13 @@ router.post("/registration",
         return res.render("registration", { error: "Email is already registered" });
     }
 
-    hashedPassword = bcrypt.hash(password, 10)
-
     let user = await usersCollection().insertOne({
         login: login,
         email: email,
-        password: hashedPassword
+        password: await bcrypt.hash(password, 10)
     });
 
     req.session.user = user.insertedId;
-    // console.log( req.session.user )
     res.redirect("/");
 });
 
@@ -78,6 +86,5 @@ router.get("/logout", (req, res) => {
         res.redirect("/"); 
     });
 });
-
 
 module.exports = router;
