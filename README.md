@@ -47,8 +47,8 @@ This project is a secure and interactive web application built using **EJS**, **
 1. **Clone the Repository**
 
    ```sh
-   git clone <repository_url>
-   cd <project_folder>
+   git clonegit@github.com:barcek2281/assigment4.git
+   cd assigment4
    ```
 
 2. **Install Dependencies**
@@ -70,7 +70,7 @@ This project is a secure and interactive web application built using **EJS**, **
 4. **Run the Application Locally**
 
    ```sh
-   node server.js
+   npm start
    ```
 
    - Open `http://localhost:3000` in your browser.
@@ -99,7 +99,7 @@ This project is a secure and interactive web application built using **EJS**, **
 
 ## Contact
 
-For any issues or inquiries, feel free to reach out: 📧 Email: [your\_email@example.com](mailto\:your_email@example.com)
+For any issues or inquiries, feel free to reach out: 📧 Email: [sabdpp17@gmail.com](mailto\:sabdpp17@gmail.com)
 
 ---
 
