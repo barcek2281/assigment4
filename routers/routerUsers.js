@@ -65,7 +65,7 @@ router.post("/registration",
     let user = await usersCollection().insertOne({
         login: login,
         email: email,
-        password: bcrypt.hash(password, saltRounds)
+        password: bcrypt.hash(password, Number(saltRounds))
     });
 
     req.session.user = user.insertedId;
