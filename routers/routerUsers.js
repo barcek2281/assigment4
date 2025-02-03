@@ -3,17 +3,16 @@ const bcrypt = require('bcrypt');
 const {getDatabase} = require("../db/mongo.js");
 const { body, validationResult } = require("express-validator");
 const {ObjectId} = require('mongodb'); 
+const nodemailer = require("nodemailer");
 
 const router = express.Router();
 const saltRounds = process.env.SALT;
-
 
 let usersCollection = () => {
     return getDatabase().collection("users");
 };
 
 router.get("/", async (req, res) => {
-    // console.log(req.session.user)
     user = await usersCollection().findOne({_id: new ObjectId(req.session.user)})
     if (user) {
         res.render("index", {user: user});
@@ -31,13 +30,11 @@ router.post("/login", async (req, res) => {
 
     let user = await usersCollection().findOne({email: email});
     if (!user) {
-        res.render("login", {error: "incorrect email or password"})
-        return
+        return res.render("login", {error: "incorrect email or password"})
     }
 
     result = await bcrypt.compare(password, user.password);
     if (result) {
-    
         req.session.user = user._id
         res.redirect("/")
     } else {
@@ -69,7 +66,7 @@ router.post("/registration",
     let user = await usersCollection().insertOne({
         login: login,
         email: email,
-        password: await bcrypt.hash(password, 10)
+        password: bcrypt.hash(password, saltRounds)
     });
 
     req.session.user = user.insertedId;

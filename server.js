@@ -4,8 +4,9 @@ const path = require("path");
 const bodyParser = require("body-parser");
 const session = require("express-session");
 
-const {connectToDatabase} = require("./db/mongo.js")
-const routerUser = require("./routers/routerUsers")
+const {connectToDatabase} = require("./db/mongo.js");
+const routerUser = require("./routers/routerUsers");
+const routerFeature = require("./routers/routerFeature");
 
 dotenv.config()
 const app = express();
@@ -29,7 +30,8 @@ app.use(session({
 }));
 
 
-app.use("/", routerUser);
+app.use("/", routerUser)
+app.use("/", routerFeature);
 
 try {
     connectToDatabase();
