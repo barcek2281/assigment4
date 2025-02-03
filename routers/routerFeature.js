@@ -75,9 +75,12 @@ router.post("/forget-password/:token", async (req, res) => {
     res.render("new-password", {token: token, msg: "password changed"});
 });
 
-router.post('/upload-avatar',  authenticateUser,upload.single('avatar'), async (req, res) => {
+router.post('/upload-avatar',upload.single('avatar'), async (req, res) => {
     if (!req.file){
          return res.status(400).send("No file uploaded");
+    }
+    if (!req.session.user) {
+        return res.status(404).send("forbidden");
     }
     await usersCollection().updateOne({ _id: new ObjectId(req.session.user) }, { $set: { avatar: `/uploads/${req.file.filename}` } });
     res.redirect("/");
