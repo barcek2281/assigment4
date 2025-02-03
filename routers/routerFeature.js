@@ -10,6 +10,7 @@ const nodemailer = require("nodemailer");
 const PORT = process.env.PORT || 3000;
 const router = express.Router();
 const saltRounds = Number(process.env.SALT);
+const upload = multer({ storage });
 const transporter = nodemailer.createTransport({
     service: "gmail",
     auth: {
@@ -17,7 +18,6 @@ const transporter = nodemailer.createTransport({
       pass: process.env.EMAIL_PASS,
     },
 });
-
 
 const storage = multer.diskStorage({
     destination: (req, file, cb) => {
@@ -28,13 +28,10 @@ const storage = multer.diskStorage({
     }
 });
 
-const upload = multer({ storage });
 
 let usersCollection = () => {
     return getDatabase().collection("users");
 };
-
-
 
 router.get("/forget-password", async (req, res) => {
     res.render("password-reset", {error: null})
@@ -72,12 +69,12 @@ router.post("/forget-password/:token", async (req, res) => {
     if (String(password).length < 6) {
         return  res.render("new-password", {token: token, msg: "password length less than 6"});
     }
-    await usersCollection().updateOne({ resetToken: token }, { $set: { password: bcrypt.hash(password, saltRounds), resetToken: null, tokenExpiration: null } });
+    await usersCollection().updateOne({ resetToken: token }, { $set: { password: await bcrypt.hash(password, saltRounds), resetToken: null, tokenExpiration: null } });
 
     res.render("new-password", {token: token, msg: "password changed"});
 });
 
-router.post('/upload-avatar', upload.single('avatar'), async (req, res) => {
+router.post('/upload-avatar', authenticateUser,  upload.single('avatar'), async (req, res) => {
     if (!req.file){
          return res.status(400).send("No file uploaded");
     }
