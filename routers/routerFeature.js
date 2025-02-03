@@ -72,8 +72,7 @@ router.post("/forget-password/:token", async (req, res) => {
     if (String(password).length < 6) {
         return  res.render("new-password", {token: token, msg: "password length less than 6"});
     }
-    const hashedPassword = await bcrypt.hash(password, saltRounds);
-    await usersCollection().updateOne({ resetToken: token }, { $set: { password: hashedPassword, resetToken: null, tokenExpiration: null } });
+    await usersCollection().updateOne({ resetToken: token }, { $set: { password: bcrypt.hash(password, saltRounds), resetToken: null, tokenExpiration: null } });
 
     res.render("new-password", {token: token, msg: "password changed"});
 });
