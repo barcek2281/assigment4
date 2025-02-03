@@ -18,9 +18,15 @@
         <h1>Hello, <%= user ? user.login : "Guest" %>!</h1>
         
         <% if (user) { %>
-            <!-- <img src="<%= user.avatar %>" alt="Avatar" class="avatar"> -->
+            <% if (user.avatar) { %>
+                <img src="<%= user.avatar %>" alt="Avatar" class="avatar">
+            <%} else {%>
+                <img src="./uploads/default.png" alt="Avatar" class="avatar">
+            <% } %>
             <form action="/upload-avatar" method="POST" enctype="multipart/form-data" class="mt-3">
-                <input type="file" name="avatar" class="form-control mb-2" required>
+                <div class="d-flex justify-content-center">
+                    <input type="file" name="avatar" class="form-control mb-2" style="width: 300px" required>
+                </div>
                 <button type="submit" class="btn btn-success">Upload Avatar</button>
             </form>
             <br>

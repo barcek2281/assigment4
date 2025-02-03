@@ -7,6 +7,7 @@ const {ObjectId} = require('mongodb');
 const multer = require('multer');
 const nodemailer = require("nodemailer");
 
+const PORT = process.env.PORT || 3000;
 const router = express.Router();
 const saltRounds = Number(process.env.SALT);
 const transporter = nodemailer.createTransport({
@@ -17,9 +18,6 @@ const transporter = nodemailer.createTransport({
     },
 });
 
-let usersCollection = () => {
-    return getDatabase().collection("users");
-};
 
 const storage = multer.diskStorage({
     destination: (req, file, cb) => {
@@ -31,6 +29,11 @@ const storage = multer.diskStorage({
 });
 
 const upload = multer({ storage });
+
+let usersCollection = () => {
+    return getDatabase().collection("users");
+};
+
 
 
 router.get("/forget-password", async (req, res) => {
@@ -46,7 +49,7 @@ router.post("/forget-password", async (req, res) => {
 
     const token = crypto.randomBytes(32).toString("hex");
     await usersCollection().updateOne({ email }, { $set: { resetToken: token, tokenExpiration: Date.now() + 3600000 } });
-    const resetLink = `http://localhost:3000/forget-password/${token}`;
+    const resetLink = `http://localhost:${PORT}/forget-password/${token}`;
     await transporter.sendMail({
       to: email,
       subject: "Password Reset",
@@ -65,8 +68,10 @@ router.post("/forget-password/:token", async (req, res) => {
     const { password } = req.body;
 
     const user = await usersCollection().findOne({ resetToken: token, tokenExpiration: { $gt: Date.now() } });
-    if (!user) return res.status(400).send("Invalid or expired token");
-
+    if (!user) return res.render("new-password", {token: token, msg: "error with token: expired"});
+    if (String(password).length < 6) {
+        return  res.render("new-password", {token: token, msg: "password length less than 6"});
+    }
     const hashedPassword = await bcrypt.hash(password, saltRounds);
     await usersCollection().updateOne({ resetToken: token }, { $set: { password: hashedPassword, resetToken: null, tokenExpiration: null } });
 
@@ -74,10 +79,11 @@ router.post("/forget-password/:token", async (req, res) => {
 });
 
 router.post('/upload-avatar', upload.single('avatar'), async (req, res) => {
-    if (!req.file) return res.status(400).send("No file uploaded");
-  const users = usersCollection();
-  await users.updateOne({ _id: new ObjectId(req.session.user) }, { $set: { avatar: `/uploads/${req.file.filename}` } });
-  res.redirect("/");
+    if (!req.file){
+         return res.status(400).send("No file uploaded");
+    }
+    await usersCollection().updateOne({ _id: new ObjectId(req.session.user) }, { $set: { avatar: `/uploads/${req.file.filename}` } });
+    res.redirect("/");
 });
 
 module.exports = router

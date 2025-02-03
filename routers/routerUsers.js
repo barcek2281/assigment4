@@ -3,7 +3,6 @@ const bcrypt = require('bcrypt');
 const {getDatabase} = require("../db/mongo.js");
 const { body, validationResult } = require("express-validator");
 const {ObjectId} = require('mongodb'); 
-const nodemailer = require("nodemailer");
 
 const router = express.Router();
 const saltRounds = Number(process.env.SALT);
