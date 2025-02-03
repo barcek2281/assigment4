@@ -6,16 +6,16 @@ const path = require("path")
 const {ObjectId} = require('mongodb'); 
 const multer = require('multer');
 const nodemailer = require("nodemailer");
+const authenticateUser = require("../middleware/middleware.js")
 
 const PORT = process.env.PORT || 3000;
 const router = express.Router();
 const saltRounds = Number(process.env.SALT);
-const upload = multer({ storage });
 const transporter = nodemailer.createTransport({
     service: "gmail",
     auth: {
-      user: process.env.EMAIL_USER,
-      pass: process.env.EMAIL_PASS,
+        user: process.env.EMAIL_USER,
+        pass: process.env.EMAIL_PASS,
     },
 });
 
@@ -27,6 +27,7 @@ const storage = multer.diskStorage({
         cb(null, req.session.user + path.extname(file.originalname));
     }
 });
+const upload = multer({ storage });
 
 
 let usersCollection = () => {
@@ -46,7 +47,7 @@ router.post("/forget-password", async (req, res) => {
 
     const token = crypto.randomBytes(32).toString("hex");
     await usersCollection().updateOne({ email }, { $set: { resetToken: token, tokenExpiration: Date.now() + 3600000 } });
-    const resetLink = `http://localhost:${PORT}/forget-password/${token}`;
+    const resetLink = `http://https://assigment4-e8c1cbaa2000.herokuapp.com/forget-password/${token}`;
     await transporter.sendMail({
       to: email,
       subject: "Password Reset",
