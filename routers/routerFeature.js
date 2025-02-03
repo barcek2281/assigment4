@@ -2,12 +2,13 @@ const express = require("express");
 const bcrypt = require('bcrypt');
 const {getDatabase} = require("../db/mongo.js");
 const crypto = require("crypto");
-const { body, validationResult } = require("express-validator");
+const path = require("path")
 const {ObjectId} = require('mongodb'); 
+const multer = require('multer');
 const nodemailer = require("nodemailer");
 
 const router = express.Router();
-const saltRounds = process.env.SALT;
+const saltRounds = Number(process.env.SALT);
 const transporter = nodemailer.createTransport({
     service: "gmail",
     auth: {
@@ -20,9 +21,21 @@ let usersCollection = () => {
     return getDatabase().collection("users");
 };
 
+const storage = multer.diskStorage({
+    destination: (req, file, cb) => {
+        cb(null, 'public/uploads/');
+    },
+    filename: (req, file, cb) => {
+        cb(null, req.session.user + path.extname(file.originalname));
+    }
+});
+
+const upload = multer({ storage });
+
+
 router.get("/forget-password", async (req, res) => {
     res.render("password-reset", {error: null})
-})
+});
 
 router.post("/forget-password", async (req, res) => {
     const { email } = req.body;
@@ -54,10 +67,17 @@ router.post("/forget-password/:token", async (req, res) => {
     const user = await usersCollection().findOne({ resetToken: token, tokenExpiration: { $gt: Date.now() } });
     if (!user) return res.status(400).send("Invalid or expired token");
 
-    const hashedPassword = await bcrypt.hash(password, 10);
+    const hashedPassword = await bcrypt.hash(password, saltRounds);
     await usersCollection().updateOne({ resetToken: token }, { $set: { password: hashedPassword, resetToken: null, tokenExpiration: null } });
 
     res.render("new-password", {token: token, msg: "password changed"});
+});
+
+router.post('/upload-avatar', upload.single('avatar'), async (req, res) => {
+    if (!req.file) return res.status(400).send("No file uploaded");
+  const users = usersCollection();
+  await users.updateOne({ _id: new ObjectId(req.session.user) }, { $set: { avatar: `/uploads/${req.file.filename}` } });
+  res.redirect("/");
 });
 
 module.exports = router

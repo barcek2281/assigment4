@@ -6,7 +6,7 @@ const {ObjectId} = require('mongodb');
 const nodemailer = require("nodemailer");
 
 const router = express.Router();
-const saltRounds = process.env.SALT;
+const saltRounds = Number(process.env.SALT);
 
 let usersCollection = () => {
     return getDatabase().collection("users");
