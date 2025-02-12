@@ -20,7 +20,7 @@ router2FA.get("/turn-on-2FA", async (req, res) => {
     user.twoFASecret = secret.base32;
     user.is2FAEnabled = true;
 
-    await usersCollection().updateOne({ email: user.email }, { $set: { twoFASecret: secret.base32, is2FAEnabled: true}});
+    await usersCollection().updateOne({ email: user.email }, { $set: { twoFASecret: secret.base32, is2FAEnabled: true, isActive: true}});
 
     qrcode.toDataURL(secret.otpauth_url, (err, data_url) => {
         if (err) return res.status(500).json({ message: "Error generating QR Code" });
@@ -50,7 +50,7 @@ router2FA.post("/turn-off-2FA", async (req, res) => {
         return res.render("verify_2fa", {error: "invalid code", login: false});
     }
 
-    await usersCollection().updateOne({ email: user.email }, { $set: { twoFASecret: "", is2FAEnabled: false}});
+    await usersCollection().updateOne({ email: user.email }, { $set: { twoFASecret: "", is2FAEnabled: false, isActive: true}});
 
     res.redirect("/")
 });

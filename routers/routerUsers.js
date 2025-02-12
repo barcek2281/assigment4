@@ -38,6 +38,7 @@ router.post("/login", async (req, res) => {
         req.session.user = user._id
         if (user.is2FAEnabled) {
             res.redirect("/login-2fa")
+            await usersCollection().updateOne({ email: user.email }, { $set: { isActive: false}});
             return
         }
         res.redirect("/")
@@ -53,7 +54,7 @@ router.get("/login-2fa", async (req, res) => {
 router.post("/login-2fa", async (req, res) => {
     const code = req.body.code;
     if (!req.session.user) {
-            return
+        return
     } 
     const user = await usersCollection().findOne({_id: new ObjectId(req.session.user)})
     if (!user) {
@@ -69,7 +70,7 @@ router.post("/login-2fa", async (req, res) => {
     if (!verified) {
         return res.render("verify_2fa", {error: "invalid code", login: true});
     }
-
+    await usersCollection().updateOne({ email: user.email }, { $set: { isActive: true}});
     res.redirect("/")
 }); 
 
@@ -100,6 +101,7 @@ router.post("/registration",
         password: await bcrypt.hash(password, 10),
         twoFASecret: "", 
         is2FAEnabled: false,
+        isActive: true,
     });
 
     req.session.user = user.insertedId;
