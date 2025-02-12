@@ -3,6 +3,7 @@ const bcrypt = require('bcrypt');
 const {getDatabase} = require("../db/mongo.js");
 const { body, validationResult } = require("express-validator");
 const {ObjectId} = require('mongodb'); 
+const speakeasy = require("speakeasy");
 
 const router = express.Router();
 const saltRounds = Number(process.env.SALT);
@@ -35,11 +36,42 @@ router.post("/login", async (req, res) => {
     result = await bcrypt.compare(password, user.password);
     if (result) {
         req.session.user = user._id
+        if (user.is2FAEnabled) {
+            res.redirect("/login-2fa")
+            return
+        }
         res.redirect("/")
     } else {
         res.render("login", {error: "incorrect email or password"})
     }
 });
+
+router.get("/login-2fa", async (req, res) => {
+    res.render("verify_2fa", {error:null, login: true})
+});
+
+router.post("/login-2fa", async (req, res) => {
+    const code = req.body.code;
+    if (!req.session.user) {
+            return
+    } 
+    const user = await usersCollection().findOne({_id: new ObjectId(req.session.user)})
+    if (!user) {
+        return
+    }
+
+    const verified = speakeasy.totp.verify({
+        secret: user.twoFASecret,
+        encoding: "base32",
+        token: code,
+    });
+
+    if (!verified) {
+        return res.render("verify_2fa", {error: "invalid code", login: true});
+    }
+
+    res.redirect("/")
+}); 
 
 router.get("/registration", async (req, res) => {
     res.render("registration", {error: null})
@@ -65,7 +97,9 @@ router.post("/registration",
     let user = await usersCollection().insertOne({
         login: login,
         email: email,
-        password: await bcrypt.hash(password, 10)
+        password: await bcrypt.hash(password, 10),
+        twoFASecret: "", 
+        is2FAEnabled: false,
     });
 
     req.session.user = user.insertedId;

@@ -7,6 +7,7 @@ const session = require("express-session");
 const {connectToDatabase} = require("./db/mongo.js");
 const routerUser = require("./routers/routerUsers");
 const routerFeature = require("./routers/routerFeature");
+const router2FA = require("./routers/router2fa");
 
 dotenv.config()
 const app = express();
@@ -30,8 +31,9 @@ app.use(session({
 }));
 
 
-app.use("/", routerUser)
+app.use("/", routerUser);
 app.use("/", routerFeature);
+app.use("/", router2FA);
 
 try {
     connectToDatabase();

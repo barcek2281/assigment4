@@ -30,6 +30,12 @@
                 <button type="submit" class="btn btn-success">Upload Avatar</button>
             </form>
             <br>
+            <% if (user.is2FAEnabled) {%>
+                <a class="btn btn-danger" href="/turn-off-2FA">Turn off 2FA</a>
+            <%} else {%>
+                <a class="btn btn-primary" href="/turn-on-2FA">Turn on 2FA</a>
+            <% } %>
+            <br>
             <a href="/logout" class="btn btn-danger mt-3">Logout</a>
         <% } else { %>
             <a href="/login" class="btn btn-primary">Login</a>
